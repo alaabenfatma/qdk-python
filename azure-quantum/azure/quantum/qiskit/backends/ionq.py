@@ -45,8 +45,8 @@ class IonQBackend(Backend):
             "meas_map": meas_map,
         }
 
-    def run(self, circuit, **kwargs):
-        """Submits the given circuit to run on an IonQ target."""        
+    @staticmethod
+    def _translate_circuit(circuit, **kwargs):
         # If the circuit was created using qiskit.assemble,
         # disassemble into QASM here
         if isinstance(circuit, QasmQobj) or isinstance(circuit, Qobj):
@@ -63,6 +63,19 @@ class IonQBackend(Backend):
             "qubits": circuit.num_qubits,
             "circuit": ionq_circ,
         })
+
+        return input_data, meas_map
+
+    def estimate_cost(self, circuit, shots):
+        """Estimate the costs for the given circuit."""
+        input_data, _ = self._translate_circuit(circuit, **kwargs)
+        workspace = self.provider().get_workspace()
+        target = workspace.get_targets(self.name())
+        return target.estimate_cost(circuit, num_shots=shots)
+
+    def run(self, circuit, **kwargs):
+        """Submits the given circuit to run on an IonQ target."""        
+        input_data, meas_map = self._translate_circuit(circuit, **kwargs)
 
         # Options are mapped to input_params
         # Take also into consideration options passed in the kwargs, as the take precedence
