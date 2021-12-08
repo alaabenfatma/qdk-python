@@ -39,6 +39,16 @@ class TestQiskit(QuantumTestBase):
         return circuit
 
     @pytest.mark.ionq
+    def test_plugins_estimate_cost_qiskit_ionq(self):
+        circuit = self._3_qubit_ghz()
+        workspace = self.create_workspace()
+        provider = AzureQuantumProvider(workspace=workspace)
+        assert "azure-quantum-qiskit" in provider._workspace.user_agent
+        backend = provider.get_backend("ionq.simulator")
+        cost = backend.estimate_cost(circuit, shots=100e3)
+
+
+    @pytest.mark.ionq
     @pytest.mark.live_test
     def test_plugins_submit_qiskit_to_ionq(self):
         circuit = self._3_qubit_ghz()
